@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>我要学音标</title>
+        <!-- <script src="./mp3_path.js"></script> -->
+        <script src="./phonetics.js"></script>
+        <script>
+            function randomsort(a, b){
+                return Math.random() > 0.5 ? -1: 1;
+            }
+            function sort_object(dict) {
+                var items = Object.keys(dict).map(function(key) {
+                    return [key, dict[key]];
+                });
+                let sorted_items = items.sort(function(first, second) {
+                    return second[1] - first[1];
+                });
+                return sorted_items
+            }
+            function fill_page(info){
+                let html;
+                let count = 1
+                let row = ""
+                let characters = Object.keys(phonetics).sort(randomsort) // 打乱顺序
+                if (characters.length == 0){ // 已经学习完所有音标
+                    html = "<center>"
+                    html += "<p>恭喜你，在本轮次背诵中记住了全部的音标，真是太棒了~~</p>" + 
+                            "<p>想知道你对每个音标的熟悉程度吗？我们为你生成了本轮次音标背诵记录，方便你与下一轮进行对比</p>" + 
+                            "<p>期待看到你一次过关的那一天 ~(●'◡'●)~</p><br><br><br>" + 
+                            "<p><b>你在本轮的学习中的背诵次数为：</b></p>"
+
+                    let learning_record_sorted = sort_object(learning_record)
+                    console.log(learning_record_sorted)
+                    html += "<table border='1' style='font-size:18px; font-family:Times New Roman;'>"
+                    for (let i=0; i<learning_record_sorted.length; i++){
+
+                        row += "<td>"+learning_record_sorted[i][0] + " <b>" + learning_record_sorted[i][1]+"</b> 次</td>"
+                        if ((i+1) % 5 == 0){
+                            html += "<tr>" + row + "</tr>"
+                            row = ""
+                        }
+                    }
+                    if (row != ""){
+                        html += "<tr>" + row + "</tr>"
+                    }
+                    html += "</table></center>"         
+                    document.getElementById('wholepage').innerHTML = html;
+                    return 
+                }else{
+                    if (characters.length==1){
+                        html = "<tr><th></th><th>音标</th><th>音频</th><th>判断</th></tr>"
+                    }else{
+                        html = "<tr><th></th><th>音标</th><th>音频</th><th>判断</th> <th></th><th>音标</th><th>音频</th><th>判断</th></tr>"
+                    }
+                    
+                    for (let i=0; i<characters.length; i++){
+                        let char = characters[i];
+                        learning_record[char] = recite_number
+                        row +=  "<td bgcolor='#F0F0F0'>" + String(count) + "</td>" + 
+                                "<td style='font-family:Times New Roman; font-size:25px;'><b><a style='text-decoration:none;' target='_blank' href='"+phonetics[char]["website"]+"''>" + char + "</a></b></td>" +
+                                "<td>" + audio_html("audios/"+phonetics[char]["simple_name"]+".mp3") + "</td>" +  // TODO：这里有的读音有两次哟，要改
+                                "<td><input type='checkbox' name='phonetics' id='"+phonetics[char]["simple_name"]+"' value='"+phonetics[char]["simple_name"]+"'><label for='"+phonetics[char]["simple_name"]+"' style='font-size:20px;'>记得</label></td>"
+                        if (count % 2 == 0){
+                            html += "<tr>" + row + "</tr>"
+                            row = ""
+                        }
+                        count += 1
+                    }
+                    if (row != ""){
+                        html += "<tr>" + row + "</tr>"
+                    }
+                    recite_number += 1 // 背诵次数
+                    console.log(learning_record);
+                    document.getElementById('table_frame').innerHTML = html;
+                }
+
+            }
+            function load_next_round(){
+                // 获取所有选中的音标(已掌握的)
+                let name_dict = {'i-sound2': '/iː/', 'i-sound': '/ɪ/', 'e-sound': '/e/', 'an-sound': '/æ/', 'er-sound': '/ɜː/', 'e^-sound': '/ə/', '^-sound': '/ʌ/', 'u-sound2': '/uː/', 'u-sound': '/ʊ/', 'o-sound2': '/ɔː/', 'o-sound': '/ɒ/', 'a-sound2': '/ɑː/', 'ei': '/eɪ/', 'ai': '/aɪ/', 'oi': '/ɔɪ/', 'ao': '/aʊ/', 'eu': '/əʊ/', 'ir': '/ɪə/', 'er': '/eə/', 'uer': '/ʊə/', 'p': '/p/', 't': '/t/', 'k': '/k/', 'b': '/b/', 'd': '/d/', 'g': '/ɡ/', 'f': '/f/', 's': '/s/', 'ss': '/ʃ/', 'si': '/θ/', 'h': '/h/', 'v': '/v/', 'z': '/z/', 'n3': '/ʒ/', 'qq': '/ð/', 'r': '/r/', 'tss': '/tʃ/', 'tr': '/tr/', 'ts': '/ts/', 'd3': '/dʒ/', 'dr': '/dr/', 'dz': '/dz/', 'm': '/m/', 'n': '/n/', 'ng': '/ŋ/', 'l': '/l/', 'j': '/j/', 'w': '/w/'}    
+                let has_known = document.getElementsByName("phonetics");
+                for (let i=0; i<has_known.length; i++){
+                    if (has_known[i].checked){
+                        delete phonetics[name_dict[has_known[i].value]]
+                    }
+                } 
+                document.getElementById('table_frame').innerHTML = null;
+                fill_page("正在更新页面"); // 载入更新后的页面
+            }
+            function start_over(){
+                location.reload(false); // 重新载入页面
+            }
+        </script>
+    </head>
+    
+    <body>
+            <center>
+                <h1>音标学习神器</h1>
+            </center>
+            <div id="wholepage">
+                <div style="padding-left: 215px;">
+                    <h3>使用说明</h3>
+                    <p style="text-indent: 2em;">1. 请<b>勾选</b>上认识（会读、会写）的音标；<b>点击音标</b>可跳转详情页面学习；<b>点击音频</b>可听正确发音</p>
+                    <p style="text-indent: 2em;">2. 点击<b>"开始下一轮”</b>按钮，进入下一轮学习；下一轮将不会出现本轮已勾选的音标，直到已经认识完全部音标</p>
+                    <p style="text-indent: 2em;">3. 点击<b>"重新载入"按钮</b>，将重新载入全部音标，不保留历史记录（请坚持完成每一轮哦）</p>
+                </div>
+                <div>
+                    <center>
+                        <table border="1" id="table_frame" cellpadding="10"></table><br>
+                        <input style="width: 100px; height: 35px;" type="button" onclick="load_next_round()" value="开始下一轮">
+                        <input style="width: 100px; height: 35px;" type="button" onclick="start_over()" value="重新载入">
+                    </center>
+                </div>
+            </div>
+
+
+    </body>
+    <script>
+        function audio_html(mp3_path){
+            let audio_html = "<audio controls><source src='" + mp3_path + "' type='audio/mpeg'></audio>"
+            return audio_html
+        }
+        fill_page("正在重新加载页面");
+
+
+    </script>
+</html>
